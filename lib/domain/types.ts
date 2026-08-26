@@ -10,7 +10,7 @@ import {
   DocumentPageMetadataSchema,
   DocumentMetadataSchema,
   AssessmentSchema,
-} from '../validation/schemas.js';
+} from '../validation/schemas';
 
 export type ProcessingStage = z.infer<typeof ProcessingStageSchema>;
 export type AnswerRegion = z.infer<typeof AnswerRegionSchema>;

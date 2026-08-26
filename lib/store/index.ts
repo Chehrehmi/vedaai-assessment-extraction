@@ -1,1 +1,1 @@
-export * from './assessment-store.js';
+export * from './assessment-store';

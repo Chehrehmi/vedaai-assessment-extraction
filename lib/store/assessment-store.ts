@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-import { Assessment, ProcessingStage } from '../domain/types.js';
-import { AssessmentSchema } from '../validation/schemas.js';
+import { Assessment, ProcessingStage } from '../domain/types';
+import { AssessmentSchema } from '../validation/schemas';
 
 export interface CreateAssessmentParams {
   id?: string;

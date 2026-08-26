@@ -1,6 +1,6 @@
-export * from './types.js';
+export * from './types';
 
-import { Question, Answer, AnswerMapping, AnswerRegion } from './types.js';
+import { Question, Answer, AnswerMapping, AnswerRegion } from './types';
 
 /**
  * Pure helper: Deterministically sorts questions by printed order.

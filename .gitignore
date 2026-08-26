@@ -8,4 +8,5 @@ build/
 coverage/
 .DS_Store
 *.log
+*.tsbuildinfo
 phase0-output/
