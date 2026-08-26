@@ -4,10 +4,14 @@ import {
   PageImageInput,
   RawQuestionExtraction,
   RawAnswerBlock,
+  SemanticQuestionCandidate,
+  SemanticAnswerCandidate,
+  SemanticMappingDecision,
 } from './types';
 import {
   RawQuestionExtractionArraySchema,
   RawAnswerBlockArraySchema,
+  SemanticMappingResponseSchema,
 } from './schemas';
 
 const QUESTION_EXTRACTION_PROMPT = `
@@ -107,6 +111,58 @@ const ANSWER_RESPONSE_SCHEMA = {
     },
     required: ['box_2d', 'text', 'confidence'],
   },
+};
+
+const SEMANTIC_MAPPING_PROMPT = `
+You are an expert academic evaluator AI specialized in mapping student handwritten answers to exam questions based on semantic content and subject-matter terminology.
+
+Task:
+Determine whether each supplied handwritten answer candidate corresponds to one of the supplied unresolved exam questions.
+
+CRITICAL RULES & CONSTRAINTS:
+1. Candidate Bounding: You MUST ONLY select "questionId" from the provided Questions list and "answerId" from the provided Answers list. NEVER invent IDs, question numbers, or answer numbers.
+2. Conservative Decision-Making: Do NOT force a match if there is insufficient evidence. If an answer cannot be defensibly mapped to any question, set "questionId" to null.
+3. Ambiguity Handling: If an answer could equally belong to multiple questions (or if two questions are equally plausible), set "questionId" to null or provide a low confidence score (< 0.60).
+4. Semantic Analysis: Evaluate algorithms, mathematical symbols, variable names, problem statements, proofs, derivations, definitions, and code to assess alignment between answer transcription and question text.
+5. Provide a confidence score between 0.0 and 1.0 indicating your semantic certainty:
+   - 0.85 to 1.00: High confidence semantic match with unambiguous conceptual alignment.
+   - 0.60 to 0.84: Moderate confidence / plausible match that requires human teacher review.
+   - 0.00 to 0.59: Weak or ambiguous match (set questionId to null or low confidence).
+6. Provide a concise explanation in "reason".
+7. Return ONLY a valid JSON object matching the requested schema.
+`;
+
+const SEMANTIC_MAPPING_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    decisions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          answerId: {
+            type: Type.STRING,
+            description: 'The exact ID of the answer candidate being mapped',
+          },
+          questionId: {
+            type: Type.STRING,
+            description: 'The exact ID of the matching question candidate, or null if no defensible match exists',
+            nullable: true,
+          },
+          confidence: {
+            type: Type.NUMBER,
+            description: 'Semantic matching confidence score between 0.0 and 1.0',
+          },
+          reason: {
+            type: Type.STRING,
+            description: 'Brief explanation of semantic correspondence or ambiguity',
+          },
+        },
+        required: ['answerId', 'confidence'],
+      },
+    },
+  },
+  required: ['decisions'],
 };
 
 export class GeminiDocumentAIProvider implements DocumentAIProvider {
@@ -301,5 +357,84 @@ export class GeminiDocumentAIProvider implements DocumentAIProvider {
     }
 
     return allBlocks;
+  }
+
+  async resolveSemanticMappings(
+    questions: SemanticQuestionCandidate[],
+    answers: SemanticAnswerCandidate[]
+  ): Promise<SemanticMappingDecision[]> {
+    if (!this.apiKey) {
+      throw new Error('LLM_API_KEY is not configured for GeminiDocumentAIProvider');
+    }
+
+    if (!questions || questions.length === 0 || !answers || answers.length === 0) {
+      return [];
+    }
+
+    const ai = new GoogleGenAI({ apiKey: this.apiKey });
+
+    const payload = JSON.stringify({
+      unresolvedQuestions: questions,
+      candidateAnswers: answers,
+    });
+
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      attempt++;
+      try {
+        const response = await ai.models.generateContent({
+          model: this.modelName,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: `${SEMANTIC_MAPPING_PROMPT}\n\nINPUT DATA:\n${payload}`,
+                },
+              ],
+            },
+          ],
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: SEMANTIC_MAPPING_RESPONSE_SCHEMA,
+            temperature: 0.1,
+          },
+        });
+
+        const rawText = response.text || '';
+        const parsedJson = JSON.parse(rawText);
+        const validation = SemanticMappingResponseSchema.safeParse(parsedJson);
+
+        if (validation.success) {
+          return validation.data.decisions.map((d) => ({
+            answerId: d.answerId,
+            questionId: d.questionId,
+            confidence: d.confidence,
+            reason: d.reason,
+          }));
+        }
+
+        if (attempt >= maxAttempts) {
+          throw new Error(
+            `Gemini semantic mapping schema validation failed: ${validation.error.message}`
+          );
+        }
+      } catch (err: any) {
+        if (err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED')) {
+          const match = err?.message?.match(/retry in ([0-9.]+)s/i);
+          const waitSec = match ? Math.ceil(parseFloat(match[1])) + 2 : 15;
+          await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
+        }
+        if (attempt >= maxAttempts) {
+          throw new Error(
+            `Gemini semantic mapping failed on attempt ${attempt}: ${err?.message || String(err)}`
+          );
+        }
+      }
+    }
+
+    return [];
   }
 }

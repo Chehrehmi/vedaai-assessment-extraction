@@ -45,6 +45,38 @@ export interface RawAnswerBlock {
 }
 
 /**
+ * Candidate question structure for semantic AI mapping fallback.
+ */
+export interface SemanticQuestionCandidate {
+  id: string;
+  number: string;
+  text: string;
+  parentNumber?: string;
+  subPart?: string;
+  alternativeText?: string;
+}
+
+/**
+ * Candidate answer structure for semantic AI mapping fallback.
+ */
+export interface SemanticAnswerCandidate {
+  id: string;
+  detectedQuestionReference?: string | null;
+  rawText?: string;
+  pages: number[];
+}
+
+/**
+ * AI mapping decision output for a single answer candidate.
+ */
+export interface SemanticMappingDecision {
+  answerId: string;
+  questionId: string | null;
+  confidence: number;
+  reason?: string;
+}
+
+/**
  * Agnostic Document AI provider interface.
  */
 export interface DocumentAIProvider {
@@ -57,4 +89,12 @@ export interface DocumentAIProvider {
    * Extracts handwritten answer blocks and bounding boxes from answer-sheet page images.
    */
   extractAnswersFromImages(pages: PageImageInput[]): Promise<RawAnswerBlock[]>;
+
+  /**
+   * Resolves semantic mappings between unresolved questions and candidate answers.
+   */
+  resolveSemanticMappings?(
+    questions: SemanticQuestionCandidate[],
+    answers: SemanticAnswerCandidate[]
+  ): Promise<SemanticMappingDecision[]>;
 }

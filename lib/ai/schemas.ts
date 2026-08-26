@@ -50,3 +50,20 @@ export const RawAnswerBlockSchema = z
  * Validates array of raw answer blocks.
  */
 export const RawAnswerBlockArraySchema = z.array(RawAnswerBlockSchema);
+
+/**
+ * Validates a single semantic mapping decision from AI provider.
+ */
+export const SemanticMappingDecisionSchema = z.object({
+  answerId: z.string().min(1, 'answerId must not be empty'),
+  questionId: z.string().min(1).nullable(),
+  confidence: z.number().min(0).max(1),
+  reason: z.string().optional(),
+});
+
+/**
+ * Validates structured response of semantic mapping decisions.
+ */
+export const SemanticMappingResponseSchema = z.object({
+  decisions: z.array(SemanticMappingDecisionSchema),
+});
