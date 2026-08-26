@@ -1,0 +1,23 @@
+{
+  "name": "vedaai-assessment-extraction",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spike": "tsx scripts/phase0-gemini-spike.ts",
+    "test": "tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^2.19.0",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.66",
+    "@types/node": "^22.13.4",
+    "pdfjs-dist": "^4.10.38",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

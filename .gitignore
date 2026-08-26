@@ -8,3 +8,4 @@ build/
 coverage/
 .DS_Store
 *.log
+phase0-output/
