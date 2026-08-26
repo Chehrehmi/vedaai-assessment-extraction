@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface SelectedFile {
   file: File;
@@ -51,6 +52,8 @@ export default function UploadPage() {
     });
   };
 
+  const router = useRouter();
+
   const handleStartMapping = async () => {
     if (!questionPaper || !answerSheet) {
       setErrorMessage('Please select both Question Paper and Answer Sheet files.');
@@ -83,12 +86,16 @@ export default function UploadPage() {
         assessmentId: data.assessmentId,
         status: data.status || 'queued',
       });
+
+      // Navigate to the assessment processing / review workspace
+      router.push(`/exams/${data.assessmentId}`);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to submit assessment files.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024 * 1024) {
