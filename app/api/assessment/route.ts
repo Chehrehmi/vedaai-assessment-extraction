@@ -4,6 +4,7 @@ import path from 'path';
 import { assessmentStore } from '@/lib/store';
 import { rasterStore, rasterizeDocument, isSupportedMimeType } from '@/lib/raster';
 import { DocumentMetadata, DocumentPageMetadata } from '@/lib/domain';
+import { processAssessment } from '@/lib/pipeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,7 +176,18 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     });
 
-    // 9. Return HTTP 202
+    // 8b. Trigger async background pipeline processing (in-memory process-lifetime execution)
+    // Note: This execution runs in-process on the next tick and is intentionally not durable across server restarts.
+    setImmediate(() => {
+      processAssessment(assessmentId, {
+        pdfBuffer: qpMime === 'application/pdf' ? qpBuffer : undefined,
+      }).catch((err) => {
+        console.error(`Background processing pipeline failed for assessment ${assessmentId}:`, err);
+      });
+    });
+
+    // 9. Return HTTP 202 Accepted immediately
+
     return NextResponse.json(
       {
         assessmentId,
@@ -183,6 +195,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 202 }
     );
+
   } catch (err: any) {
     console.error('Unhandled error in POST /api/assessment:', err);
     return errorResponse(
