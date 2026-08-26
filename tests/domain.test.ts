@@ -145,6 +145,24 @@ test('11. valid Question including sub-question metadata passes', () => {
   assert.equal(sorted[1].id, 'q-2');
 });
 
+test('11b. valid Question with alternativeText and alternativeType passes validation', () => {
+  const qWithAlt = {
+    id: 'q-16',
+    number: '16',
+    text: 'A student of class XII comes across graphical LPP question...',
+    order: 15,
+    alternativeText: 'If Z = ax + by + c attains maximum at (4,0) and (0,3)...',
+    alternativeType: 'visually_impaired',
+  };
+
+  const parseResult = QuestionSchema.safeParse(qWithAlt);
+  assert.ok(parseResult.success);
+  if (parseResult.success) {
+    assert.equal(parseResult.data.alternativeType, 'visually_impaired');
+    assert.ok(parseResult.data.alternativeText);
+  }
+});
+
 test('12. valid matched AnswerMapping passes', () => {
   const mapping = {
     questionId: 'q-1',

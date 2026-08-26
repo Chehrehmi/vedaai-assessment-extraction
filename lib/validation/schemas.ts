@@ -70,7 +70,7 @@ export const AnswerSchema = z
   });
 
 /**
- * Question entity with deterministic ordering and sub-question support
+ * Question entity with deterministic ordering, sub-question, and accessible alternative support
  */
 export const QuestionSchema = z.object({
   id: z.string().min(1, 'Question id must not be empty'),
@@ -79,6 +79,8 @@ export const QuestionSchema = z.object({
   order: z.number().int().min(0, 'Question order must be >= 0'),
   parentNumber: z.string().optional(),
   subPart: z.string().optional(),
+  alternativeText: z.string().optional(),
+  alternativeType: z.literal('visually_impaired').optional(),
 });
 
 /**
