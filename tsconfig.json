@@ -10,6 +10,7 @@
     "noEmit": true
   },
   "include": [
+    "lib/**/*",
     "scripts/**/*",
     "src/**/*",
     "tests/**/*"
