@@ -20,6 +20,31 @@ export interface RawQuestionExtraction {
 }
 
 /**
+ * Raw spatial region output from AI provider.
+ */
+export interface RawAnswerRegion {
+  box_2d?: [number, number, number, number] | number[];
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  extractionConfidence?: number;
+}
+
+/**
+ * Raw structured answer output from AI provider.
+ */
+export interface RawAnswerBlock {
+  page: number;
+  detectedQuestionReference?: string | null;
+  text?: string;
+  transcription?: string;
+  confidence?: number;
+  box_2d?: [number, number, number, number] | number[];
+  regions?: RawAnswerRegion[];
+}
+
+/**
  * Agnostic Document AI provider interface.
  */
 export interface DocumentAIProvider {
@@ -27,4 +52,9 @@ export interface DocumentAIProvider {
    * Extracts questions from question-paper page images using vision analysis.
    */
   extractQuestionsFromImages(pages: PageImageInput[]): Promise<RawQuestionExtraction[]>;
+
+  /**
+   * Extracts handwritten answer blocks and bounding boxes from answer-sheet page images.
+   */
+  extractAnswersFromImages(pages: PageImageInput[]): Promise<RawAnswerBlock[]>;
 }

@@ -44,6 +44,10 @@ class MockDocumentAIProvider implements DocumentAIProvider {
     this.lastPagesReceived = pages;
     return this.mockResponse;
   }
+
+  async extractAnswersFromImages(): Promise<any[]> {
+    return [];
+  }
 }
 
 // ----------------------------------------------------------------------------
