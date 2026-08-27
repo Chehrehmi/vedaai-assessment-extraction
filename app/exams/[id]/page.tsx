@@ -190,7 +190,8 @@ export default function AssessmentReviewPage({ params }: PageProps) {
       <div className="flex h-screen overflow-hidden bg-[#fff8f6] text-[#241916]">
         {/* Sidebar */}
         <nav className="w-64 bg-white border-r border-[#dfc0b7]/40 h-full hidden lg:flex flex-col py-6 px-4 shrink-0 shadow-sm z-50">
-          <div className="flex items-center gap-3 mb-8 px-2">
+          <div className="flex items-center gap-2.5 mb-8 px-2">
+            <img src="/logo.png" alt="VedaAI Logo" className="h-7 w-auto object-contain" />
             <span className="font-extrabold text-2xl tracking-tight text-[#241916]">VedaAI</span>
           </div>
 
@@ -214,7 +215,7 @@ export default function AssessmentReviewPage({ params }: PageProps) {
           </div>
         </nav>
 
-        <main className="flex-1 flex flex-col items-center justify-center p-6 bg-[#fff8f6] overflow-y-auto">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-[#fff8f6] overflow-y-auto">
           <ProcessingStepper
             stage={pollStage as any}
             errorCode={errorCode}
@@ -236,7 +237,8 @@ export default function AssessmentReviewPage({ params }: PageProps) {
     <div className="flex h-screen overflow-hidden bg-[#fff8f6] text-[#241916]">
       {/* Sidebar */}
       <nav className="w-64 bg-white border-r border-[#dfc0b7]/40 h-full hidden lg:flex flex-col py-6 px-4 shrink-0 shadow-sm z-50">
-        <div className="flex items-center gap-3 mb-6 px-2">
+        <div className="flex items-center gap-2.5 mb-6 px-2">
+          <img src="/logo.png" alt="VedaAI Logo" className="h-7 w-auto object-contain" />
           <span className="font-extrabold text-2xl tracking-tight text-[#241916]">VedaAI</span>
         </div>
 
@@ -283,49 +285,59 @@ export default function AssessmentReviewPage({ params }: PageProps) {
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top App Header */}
-        <header className="px-6 py-3.5 bg-white border-b border-[#dfc0b7]/40 flex items-center justify-between gap-4 shrink-0 shadow-2xs z-30">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/exams"
-              className="p-1.5 rounded-lg hover:bg-[#fff1ed] text-[#57423b] transition-colors"
-              title="Back to Uploads"
-            >
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-            </Link>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-base text-[#241916]">
-                  {assessment.questionPaper.filename || 'Exam Assessment'}
-                </h1>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#78dc77]/20 text-[#006e1c]">
-                  Completed
-                </span>
+        <header className="px-3 sm:px-6 py-2.5 sm:py-3 bg-white border-b border-[#dfc0b7]/40 flex flex-col gap-2 shrink-0 shadow-2xs z-30">
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <Link
+                href="/exams"
+                className="p-1.5 rounded-lg hover:bg-[#fff1ed] text-[#57423b] transition-colors shrink-0"
+                title="Back to Uploads"
+              >
+                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              </Link>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h1 className="font-extrabold text-sm sm:text-base text-[#241916] truncate">
+                    {assessment.questionPaper.filename || 'Exam Assessment'}
+                  </h1>
+                  <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#78dc77]/20 text-[#006e1c] shrink-0">
+                    Completed
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-[#57423b] mt-0.5 truncate hidden sm:block">
+                  Answer Sheet: {assessment.answerSheet.filename} • {assessment.questions.length} Questions Extracted
+                </p>
               </div>
-              <p className="text-[11px] text-[#57423b] mt-0.5 truncate">
-                Answer Sheet: {assessment.answerSheet.filename} • {assessment.questions.length} Questions Extracted
-              </p>
             </div>
           </div>
 
-          {/* Mobile Segmented Tab Switcher */}
-          <div className="flex lg:hidden items-center bg-[#fff1ed] p-1 rounded-xl border border-[#dfc0b7]/50 text-xs font-bold">
+          {/* Mobile Segmented Tab Switcher (Full-width, clearly accessible on mobile/tablet < lg) */}
+          <div className="flex lg:hidden items-center bg-[#fff1ed] p-1 rounded-xl border border-[#dfc0b7]/50 text-xs font-bold w-full shadow-2xs">
             <button
               type="button"
               onClick={() => setMobileActiveTab('questions')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                mobileActiveTab === 'questions' ? 'bg-[#241916] text-white shadow-2xs' : 'text-[#57423b]'
+              className={`flex-1 py-2 px-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                mobileActiveTab === 'questions'
+                  ? 'bg-[#241916] text-white shadow-2xs'
+                  : 'text-[#57423b] hover:text-[#241916]'
               }`}
             >
-              Questions ({assessment.questions.length})
+              <span className="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+              <span>Questions ({assessment.questions.length})</span>
             </button>
             <button
               type="button"
               onClick={() => setMobileActiveTab('viewer')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                mobileActiveTab === 'viewer' ? 'bg-[#241916] text-white shadow-2xs' : 'text-[#57423b]'
+              className={`flex-1 py-2 px-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                mobileActiveTab === 'viewer'
+                  ? 'bg-[#241916] text-white shadow-2xs'
+                  : 'text-[#57423b] hover:text-[#241916]'
               }`}
             >
-              Document Viewer
+              <span className="material-symbols-outlined text-[16px]">
+                {activeDocType === 'answer_sheet' ? 'edit_note' : 'description'}
+              </span>
+              <span>{activeDocType === 'answer_sheet' ? 'Answer Sheet' : 'Question Paper'}</span>
             </button>
           </div>
         </header>

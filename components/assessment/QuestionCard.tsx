@@ -48,7 +48,7 @@ export function QuestionCard({
       }`}
     >
       {/* Card Header */}
-      <div className="p-4 flex items-start justify-between gap-3">
+      <div className="p-3.5 sm:p-4 flex items-start justify-between gap-2.5 sm:gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div
             className={`w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0 ${

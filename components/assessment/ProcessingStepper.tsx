@@ -105,8 +105,8 @@ export function ProcessingStepper({
   };
 
   return (
-    <div className="w-full max-w-2xl bg-white rounded-3xl p-8 shadow-sm border border-[#dfc0b7]/40">
-      <div className="text-center mb-8">
+    <div className="w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-8 shadow-sm border border-[#dfc0b7]/40">
+      <div className="text-center mb-6 sm:mb-8">
         <div className="w-14 h-14 rounded-2xl bg-[#fae3dd] text-[#a63b17] flex items-center justify-center mx-auto mb-4">
           <span className={`material-symbols-outlined text-3xl ${!isFailed ? 'animate-spin' : ''}`}>
             {isFailed ? 'error' : 'progress_activity'}

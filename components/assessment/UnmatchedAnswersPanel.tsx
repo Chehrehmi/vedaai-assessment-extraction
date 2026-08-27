@@ -28,7 +28,7 @@ export function UnmatchedAnswersPanel({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between gap-3 bg-[#ffdad6]/20 hover:bg-[#ffdad6]/35 transition-colors text-left"
+        className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3 bg-[#ffdad6]/20 hover:bg-[#ffdad6]/35 transition-colors text-left cursor-pointer"
       >
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-[#ffdad6] text-[#ba1a1a] flex items-center justify-center font-bold text-xs">

@@ -108,7 +108,8 @@ export default function UploadPage() {
     <div className="flex h-screen overflow-hidden bg-[#fff8f6] text-[#241916]">
       {/* Sidebar */}
       <nav className="w-64 bg-white border-r border-[#dfc0b7]/40 h-full hidden lg:flex flex-col py-6 px-4 shrink-0 shadow-sm z-50">
-        <div className="flex items-center gap-3 mb-8 px-2">
+        <div className="flex items-center gap-2.5 mb-8 px-2">
+          <img src="/logo.png" alt="VedaAI Logo" className="h-7 w-auto object-contain" />
           <span className="font-extrabold text-2xl tracking-tight text-[#241916]">VedaAI</span>
         </div>
 
@@ -156,28 +157,32 @@ export default function UploadPage() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto relative">
         {/* Top Bar */}
-        <header className="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-40 bg-white/70 backdrop-blur-md border-b border-[#dfc0b7]/20">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-[#57423b] px-3 py-1.5 rounded-md bg-white border border-[#dfc0b7]/50 shadow-sm text-sm">
-              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-              <span className="font-semibold">Exams</span>
+        <header className="flex justify-between items-center w-full px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-[#dfc0b7]/20">
+          <div className="flex items-center gap-2.5">
+            <div className="lg:hidden flex items-center gap-2 mr-1">
+              <img src="/logo.png" alt="VedaAI Logo" className="h-6 w-auto object-contain" />
+              <span className="font-extrabold text-lg text-[#241916]">VedaAI</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-[#57423b] px-3 py-1.5 rounded-md bg-white border border-[#dfc0b7]/50 shadow-xs text-xs font-semibold">
+              <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+              <span>Exams</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-[#57423b]">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-[#57423b]">
             <span className="font-medium">Teacher Workspace</span>
           </div>
         </header>
 
         {/* Content Container */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-10 max-w-4xl mx-auto w-full">
-          <div className="text-center mb-8 w-full">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#241916] mb-3">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-8 sm:py-10 max-w-4xl mx-auto w-full">
+          <div className="text-center mb-6 sm:mb-8 w-full">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#241916] mb-2 sm:mb-3">
               Upload{' '}
-              <span className="bg-[#fae3dd] text-[#a63b17] px-3 py-1 rounded-xl inline-block">
+              <span className="bg-[#fae3dd] text-[#a63b17] px-2.5 sm:px-3 py-1 rounded-xl inline-block">
                 Question Paper &amp; Answer Sheets
               </span>
             </h1>
-            <p className="text-[#57423b] text-base">Upload both files to get started</p>
+            <p className="text-[#57423b] text-sm sm:text-base">Upload both files to get started</p>
           </div>
 
           {/* Submission Result / Queued State */}
