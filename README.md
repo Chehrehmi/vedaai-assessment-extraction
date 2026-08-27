@@ -26,7 +26,7 @@ Reviewers can evaluate the complete product immediately without preparing PDF fi
 
 ## 🎥 Demo Video
 
-> **Demo video:** [link]
+> **Demo video:** [Watch the VedaAI demo](https://drive.google.com/file/d/1KPdDaeRz_EZp-VIP9bp6xdZjEBVQPFPz/view?usp=sharing)
 
 ---
 
