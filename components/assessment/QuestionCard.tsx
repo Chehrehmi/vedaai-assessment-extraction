@@ -30,13 +30,13 @@ export function QuestionCard({
   const getMethodLabel = (method?: string) => {
     switch (method) {
       case 'explicit_reference':
-        return 'Explicit Reference';
+        return 'explicit reference';
       case 'structural':
-        return 'Structural Sequence';
+        return 'structural sequence';
       case 'semantic':
-        return 'Semantic Match';
+        return 'semantic similarity';
       default:
-        return 'Auto Mapped';
+        return method || 'auto mapped';
     }
   };
 
@@ -108,7 +108,14 @@ export function QuestionCard({
           </div>
         </div>
 
-        <StatusPill status={status} confidence={confidence} />
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <StatusPill status={status} confidence={confidence} />
+          {status !== 'unanswered' && mapping?.method && (
+            <span className="text-[10px] text-[#8b716a] font-medium tracking-tight">
+              via: {getMethodLabel(mapping.method)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Expanded Details when Selected */}
@@ -142,7 +149,7 @@ export function QuestionCard({
                 <div className="flex items-center gap-1.5">
                   {mapping?.method && (
                     <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#e4e2e1] text-[#57423b] font-medium">
-                      {getMethodLabel(mapping.method)}
+                      via: {getMethodLabel(mapping.method)}
                     </span>
                   )}
                   {answer.detectedQuestionReference && (

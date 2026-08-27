@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProcessingStage } from '@/lib/domain/types';
 
 interface ProcessingStepperProps {
@@ -53,6 +53,28 @@ export function ProcessingStepper({
   onUploadDifferent,
 }: ProcessingStepperProps) {
   const isFailed = stage === 'failed';
+  const isCompleted = stage === 'completed';
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Stop timer on completed or failed, otherwise tick every second
+  useEffect(() => {
+    if (isFailed || isCompleted) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isFailed, isCompleted]);
+
+  const formatElapsed = (totalSecs: number): string => {
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const getStepStatus = (stepIndex: number): 'completed' | 'active' | 'pending' => {
     if (isFailed) return 'pending';
@@ -118,6 +140,25 @@ export function ProcessingStepper({
         <p className="text-sm font-medium text-[#a63b17]">
           {getStageLabel(stage)}
         </p>
+
+        {/* Live Elapsed Timer & Guidance */}
+        {!isFailed && !isCompleted && (
+          <div className="mt-3.5 p-3 bg-[#fff1ed]/70 rounded-2xl border border-[#dfc0b7]/40 max-w-md mx-auto space-y-1.5 text-center">
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#a63b17] flex-wrap">
+              <span className="material-symbols-outlined text-[16px]">timer</span>
+              <span>Processing your assessment...</span>
+              <span className="font-mono bg-white px-2 py-0.5 rounded-md border border-[#dfc0b7]/50 shadow-2xs">
+                Elapsed: {formatElapsed(elapsedSeconds)}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#57423b] font-medium">
+              This may take a few minutes for handwritten answer sheets.
+            </p>
+            <p className="text-[10px] text-[#8b716a]">
+              Typical processing time: a few minutes
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Failure State Banner */}
