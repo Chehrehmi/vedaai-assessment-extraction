@@ -1,5 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
@@ -36,6 +36,47 @@ function getPdfjsAssetPaths(): { cMapUrl: string; standardFontDataUrl: string } 
     cMapUrl: path.join(fallbackDir, 'cmaps') + path.sep,
     standardFontDataUrl: path.join(fallbackDir, 'standard_fonts') + path.sep,
   };
+}
+
+let standardFontsRegistered = false;
+
+/**
+ * Registers standard 14 PDF fonts with @napi-rs/canvas GlobalFonts so standard fonts
+ * like Helvetica, Times, and Courier render accurately via ctx.fillText.
+ */
+function ensureStandardFontsRegistered(standardFontDir: string): void {
+  if (standardFontsRegistered || !GlobalFonts) return;
+
+  const stdFontMappings = [
+    { file: 'LiberationSans-Regular.ttf', names: ['Helvetica', 'Arial', 'Liberation Sans', 'sans-serif'] },
+    { file: 'LiberationSans-Bold.ttf', names: ['Helvetica-Bold', 'Arial-Bold', 'Helvetica Bold', 'Arial Bold'] },
+    { file: 'LiberationSans-Italic.ttf', names: ['Helvetica-Oblique', 'Arial-Italic', 'Helvetica Italic'] },
+    { file: 'LiberationSans-BoldItalic.ttf', names: ['Helvetica-BoldOblique', 'Arial-BoldItalic'] },
+    { file: 'FoxitSerif.pfb', names: ['Times', 'Times-Roman', 'serif'] },
+    { file: 'FoxitSerifBold.pfb', names: ['Times-Bold'] },
+    { file: 'FoxitSerifItalic.pfb', names: ['Times-Italic'] },
+    { file: 'FoxitSerifBoldItalic.pfb', names: ['Times-BoldItalic'] },
+    { file: 'FoxitFixed.pfb', names: ['Courier', 'monospace'] },
+    { file: 'FoxitFixedBold.pfb', names: ['Courier-Bold'] },
+    { file: 'FoxitSymbol.pfb', names: ['Symbol'] },
+    { file: 'FoxitDingbats.pfb', names: ['ZapfDingbats'] },
+  ];
+
+  for (const mapping of stdFontMappings) {
+    const fontPath = path.join(standardFontDir, mapping.file);
+    if (fs.existsSync(fontPath)) {
+      try {
+        const fontBuf = fs.readFileSync(fontPath);
+        for (const name of mapping.names) {
+          GlobalFonts.register(fontBuf, name);
+        }
+      } catch {
+        // Ignore font format registration errors
+      }
+    }
+  }
+
+  standardFontsRegistered = true;
 }
 
 /**
@@ -77,6 +118,7 @@ export async function rasterizeDocument(
 async function rasterizePdf(buffer: Buffer): Promise<RasterResult> {
   try {
     const { cMapUrl, standardFontDataUrl } = getPdfjsAssetPaths();
+    ensureStandardFontsRegistered(standardFontDataUrl);
 
     const loadingTask = pdfjsLib.getDocument({
       data: new Uint8Array(buffer),
@@ -87,8 +129,28 @@ async function rasterizePdf(buffer: Buffer): Promise<RasterResult> {
       useSystemFonts: true,
     });
 
-
     const pdfDoc = await loadingTask.promise;
+
+    // Standard 14 PDF fonts (Helvetica, Times, Courier) are not embedded in the PDF and
+    // do not have vector glyph paths in pdfjs-dist. For standard fonts (font.missingFile === true),
+    // disableFontFace must be false so CanvasGraphics renders them cleanly via ctx.fillText using
+    // our registered GlobalFonts. Embedded fonts (font.missingFile === false) continue using
+    // disableFontFace = true to render exact vector path curves.
+    const commonObjs = (pdfDoc as any)._transport?.commonObjs;
+    if (commonObjs && typeof commonObjs.resolve === 'function') {
+      const originalResolve = commonObjs.resolve.bind(commonObjs);
+      commonObjs.resolve = function (id: string, font: any) {
+        if (font && typeof font === 'object' && 'disableFontFace' in font) {
+          if (font.missingFile) {
+            font.disableFontFace = false;
+          } else {
+            font.disableFontFace = true;
+          }
+        }
+        return originalResolve(id, font);
+      };
+    }
+
     const pageCount = pdfDoc.numPages;
 
     if (pageCount <= 0) {
