@@ -146,3 +146,45 @@ test('8. RasterStore saves, retrieves, and clears pages correctly', () => {
   rasterStore.deleteAssessmentPages('asmt-1');
   assert.equal(rasterStore.count(), 0);
 });
+
+test('9. Maths-SQP-shorter-edited.pdf rasterizes all pages with proper font glyphs', async () => {
+  const mathsSqpPath = path.resolve(__dirname, '../../reference/Maths-SQP-shorter-edited.pdf');
+  if (!fs.existsSync(mathsSqpPath)) {
+    return;
+  }
+
+  const pdfBuffer = fs.readFileSync(mathsSqpPath);
+  const result = await rasterizeDocument(pdfBuffer, 'application/pdf');
+
+  assert.equal(result.pageCount, 3);
+  assert.equal(result.pages.length, 3);
+
+  for (let i = 0; i < 3; i++) {
+    const page = result.pages[i];
+    assert.equal(page.pageNumber, i + 1);
+    assert.equal(page.width, 1191);
+    assert.equal(page.height, 1684);
+    assert.ok(page.imageBuffer.length > 50000);
+  }
+});
+
+test('10. ANS_SHEET.pdf rasterizes all handwritten pages with full fidelity', async () => {
+  const ansSheetPath = path.resolve(__dirname, '../../reference/ANS_SHEET.pdf');
+  if (!fs.existsSync(ansSheetPath)) {
+    return;
+  }
+
+  const pdfBuffer = fs.readFileSync(ansSheetPath);
+  const result = await rasterizeDocument(pdfBuffer, 'application/pdf');
+
+  assert.equal(result.pageCount, 3);
+  assert.equal(result.pages.length, 3);
+
+  for (let i = 0; i < 3; i++) {
+    const page = result.pages[i];
+    assert.equal(page.pageNumber, i + 1);
+    assert.ok(page.width > 0);
+    assert.ok(page.height > 0);
+    assert.ok(page.imageBuffer.length > 50000);
+  }
+});

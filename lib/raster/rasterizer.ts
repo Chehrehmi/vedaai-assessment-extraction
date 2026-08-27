@@ -1,5 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createRequire } from 'module';
+import path from 'path';
+import fs from 'fs';
 import { RasterResult, RasterizedPage } from './types';
 
 export const SUPPORTED_MIME_TYPES = [
@@ -10,6 +13,30 @@ export const SUPPORTED_MIME_TYPES = [
 ] as const;
 
 export type SupportedMimeType = typeof SUPPORTED_MIME_TYPES[number];
+
+/**
+ * Resolves the directory paths for pdfjs-dist cmaps and standard_fonts in Node.js.
+ */
+function getPdfjsAssetPaths(): { cMapUrl: string; standardFontDataUrl: string } {
+  try {
+    const require = createRequire(import.meta.url);
+    const pdfjsPkg = require.resolve('pdfjs-dist/package.json');
+    const pdfjsDir = path.dirname(pdfjsPkg);
+    const cMapUrl = path.join(pdfjsDir, 'cmaps') + path.sep;
+    const standardFontDataUrl = path.join(pdfjsDir, 'standard_fonts') + path.sep;
+    if (fs.existsSync(cMapUrl) && fs.existsSync(standardFontDataUrl)) {
+      return { cMapUrl, standardFontDataUrl };
+    }
+  } catch {
+    // Fall through to directory search
+  }
+
+  const fallbackDir = path.join(process.cwd(), 'node_modules', 'pdfjs-dist');
+  return {
+    cMapUrl: path.join(fallbackDir, 'cmaps') + path.sep,
+    standardFontDataUrl: path.join(fallbackDir, 'standard_fonts') + path.sep,
+  };
+}
 
 /**
  * Checks if a given MIME type is supported for rasterization.
@@ -49,11 +76,17 @@ export async function rasterizeDocument(
  */
 async function rasterizePdf(buffer: Buffer): Promise<RasterResult> {
   try {
+    const { cMapUrl, standardFontDataUrl } = getPdfjsAssetPaths();
+
     const loadingTask = pdfjsLib.getDocument({
       data: new Uint8Array(buffer),
+      cMapUrl,
+      cMapPacked: true,
+      standardFontDataUrl,
+      disableFontFace: true,
       useSystemFonts: true,
-      disableFontFace: false,
     });
+
 
     const pdfDoc = await loadingTask.promise;
     const pageCount = pdfDoc.numPages;
