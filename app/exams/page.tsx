@@ -14,6 +14,7 @@ export default function UploadPage() {
   const [questionPaper, setQuestionPaper] = useState<SelectedFile | null>(null);
   const [answerSheet, setAnswerSheet] = useState<SelectedFile | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submissionResult, setSubmissionResult] = useState<{
     assessmentId: string;
@@ -93,6 +94,32 @@ export default function UploadPage() {
       setErrorMessage(err?.message || 'Failed to submit assessment files.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleTryDemo = async () => {
+    setIsDemoLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch('/api/assessment/demo', {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const errorMsg = data?.error?.message || `Server error (${res.status})`;
+        setErrorMessage(errorMsg);
+        setIsDemoLoading(false);
+        return;
+      }
+
+      // Navigate directly to the pre-validated demo assessment review workspace
+      router.push(`/exams/${data.assessmentId}`);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to load sample demo assessment.');
+      setIsDemoLoading(false);
     }
   };
 
@@ -336,6 +363,41 @@ export default function UploadPage() {
             </button>
             <p className="text-xs text-[#57423b]/80 mt-3">
               Once both files are uploaded, you&apos;ll be able to map answers with questions
+            </p>
+          </div>
+
+          {/* Divider & Secondary Demo Action */}
+          <div className="mt-8 pt-6 border-t border-[#dfc0b7]/40 w-full max-w-md flex flex-col items-center text-center">
+            <div className="flex items-center gap-3 w-full mb-4">
+              <div className="h-px bg-[#dfc0b7]/50 flex-1"></div>
+              <span className="text-xs font-semibold text-[#57423b]/70 uppercase tracking-wider">or test instantly</span>
+              <div className="h-px bg-[#dfc0b7]/50 flex-1"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTryDemo}
+              disabled={isSubmitting || isDemoLoading}
+              className={`w-full sm:w-auto px-6 py-2.5 rounded-full border border-[#a63b17]/40 bg-white hover:bg-[#fff1ed] text-[#a63b17] font-bold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all ${
+                isSubmitting || isDemoLoading
+                  ? 'opacity-60 cursor-not-allowed'
+                  : 'cursor-pointer hover:border-[#a63b17] active:scale-98'
+              }`}
+            >
+              {isDemoLoading ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-[#a63b17] border-t-transparent rounded-full animate-spin"></span>
+                  <span>Loading Demo Assessment...</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">bolt</span>
+                  <span>Try Demo Assessment</span>
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-[#57423b]/70 mt-2 max-w-xs">
+              See how VedaAI maps handwritten answers to questions and highlights them on the original sheet.
             </p>
           </div>
         </div>

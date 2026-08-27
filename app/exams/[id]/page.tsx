@@ -300,6 +300,11 @@ export default function AssessmentReviewPage({ params }: PageProps) {
                   <h1 className="font-extrabold text-sm sm:text-base text-[#241916] truncate">
                     {assessment.questionPaper.filename || 'Exam Assessment'}
                   </h1>
+                  {(assessment.id.startsWith('demo-') || assessmentId.startsWith('demo-')) && (
+                    <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#fae3dd] text-[#a63b17] border border-[#dfc0b7]/60 shrink-0">
+                      Sample Assessment
+                    </span>
+                  )}
                   <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#78dc77]/20 text-[#006e1c] shrink-0">
                     Completed
                   </span>

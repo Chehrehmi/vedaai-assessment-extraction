@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { assessmentStore } from '@/lib/store';
+import { isDemoAssessment, ensureDemoAssessmentLoaded } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,11 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const assessment = assessmentStore.get(id);
+    let assessment = assessmentStore.get(id);
+
+    if (!assessment && isDemoAssessment(id)) {
+      assessment = await ensureDemoAssessmentLoaded();
+    }
 
     if (!assessment) {
       return NextResponse.json(

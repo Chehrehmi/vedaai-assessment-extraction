@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rasterStore, DocumentType } from '@/lib/raster';
+import { isDemoAssessment, ensureDemoAssessmentLoaded } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,12 @@ export async function GET(
       );
     }
 
-    const page = rasterStore.getPage(id, normalizedType, pageNum);
+    let page = rasterStore.getPage(id, normalizedType, pageNum);
+
+    if (!page && isDemoAssessment(id)) {
+      await ensureDemoAssessmentLoaded();
+      page = rasterStore.getPage(id, normalizedType, pageNum);
+    }
 
     if (!page) {
       return NextResponse.json(
