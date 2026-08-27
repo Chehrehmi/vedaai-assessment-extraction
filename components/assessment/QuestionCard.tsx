@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Question, Answer, AnswerMapping } from '@/lib/domain/types';
+import { Question, Answer, AnswerMapping, QuestionEvaluation } from '@/lib/domain/types';
 import { StatusPill } from './StatusPill';
 
 interface QuestionCardProps {
   question: Question;
   mapping?: AnswerMapping;
   answer?: Answer;
+  evaluation?: QuestionEvaluation;
   isSelected: boolean;
   onSelect: () => void;
   onJumpToPage?: (page: number) => void;
@@ -17,6 +18,7 @@ export function QuestionCard({
   question,
   mapping,
   answer,
+  evaluation,
   isSelected,
   onSelect,
   onJumpToPage,
@@ -71,6 +73,38 @@ export function QuestionCard({
             <p className="text-xs text-[#57423b] line-clamp-2 leading-relaxed">
               {question.text}
             </p>
+
+            {/* Marks Badge */}
+            {evaluation && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                    evaluation.status === 'unanswered'
+                      ? 'bg-[#e4e2e1]/70 text-[#57423b] border-[#c8c6c6]'
+                      : evaluation.status === 'needs_review'
+                      ? 'bg-[#fff1ed] text-[#a63b17] border-[#dfc0b7]'
+                      : evaluation.status === 'correct'
+                      ? 'bg-[#e8f5e9] text-[#006e1c] border-[#a5d6a7]'
+                      : 'bg-[#ffebee] text-[#c62828] border-[#ef9a9a]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[12px]">
+                    {evaluation.status === 'unanswered'
+                      ? 'remove_circle_outline'
+                      : evaluation.status === 'needs_review'
+                      ? 'pending'
+                      : evaluation.status === 'correct'
+                      ? 'check_circle'
+                      : 'cancel'}
+                  </span>
+                  <span>
+                    {evaluation.awardedMarks !== null && evaluation.awardedMarks !== undefined
+                      ? `${evaluation.awardedMarks} / ${evaluation.maxMarks} M`
+                      : `— / ${evaluation.maxMarks} M (Review)`}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -158,6 +192,37 @@ export function QuestionCard({
               <p className="text-xs font-medium text-[#57423b]">
                 No handwritten answer detected on the student&apos;s answer sheet for this question.
               </p>
+            </div>
+          )}
+
+          {/* Grading & Feedback Section */}
+          {evaluation && (
+            <div className="p-3 bg-white rounded-xl border border-[#dfc0b7]/40 space-y-1.5">
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#8b716a]">
+                  Grading &amp; Feedback
+                </span>
+                <span
+                  className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md ${
+                    evaluation.status === 'unanswered'
+                      ? 'bg-[#e4e2e1] text-[#57423b]'
+                      : evaluation.status === 'needs_review'
+                      ? 'bg-[#fff1ed] text-[#a63b17]'
+                      : evaluation.status === 'correct'
+                      ? 'bg-[#e8f5e9] text-[#006e1c]'
+                      : 'bg-[#ffebee] text-[#c62828]'
+                  }`}
+                >
+                  {evaluation.awardedMarks !== null && evaluation.awardedMarks !== undefined
+                    ? `Awarded: ${evaluation.awardedMarks} / ${evaluation.maxMarks} Marks`
+                    : `Score: — / ${evaluation.maxMarks} Marks (Awaiting Teacher Scoring)`}
+                </span>
+              </div>
+              {evaluation.feedback && (
+                <p className="text-xs text-[#57423b] leading-relaxed">
+                  {evaluation.feedback}
+                </p>
+              )}
             </div>
           )}
         </div>

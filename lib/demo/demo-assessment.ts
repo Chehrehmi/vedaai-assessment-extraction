@@ -5,6 +5,7 @@ import { assessmentStore } from '../store';
 import { rasterStore, rasterizeDocument } from '../raster';
 import { extractQuestions } from '../extraction/question-extractor';
 import { mapAnswersDeterministically } from '../mapping/deterministic-mapper';
+import { evaluateAssessment } from '../grading';
 
 export const DEMO_ASSESSMENT_ID = 'demo-cbse-maths-assessment';
 
@@ -70,7 +71,7 @@ export async function ensureDemoAssessmentLoaded(): Promise<Assessment> {
   const existing = assessmentStore.get(DEMO_ASSESSMENT_ID);
   const qpPagesExisting = rasterStore.getPage(DEMO_ASSESSMENT_ID, 'question_paper', 1);
 
-  if (existing && existing.status === 'completed' && qpPagesExisting) {
+  if (existing && existing.status === 'completed' && qpPagesExisting && existing.gradingSummary) {
     return existing;
   }
 
@@ -91,6 +92,13 @@ export async function ensureDemoAssessmentLoaded(): Promise<Assessment> {
 
   // 3. Deterministically map extracted questions to DEMO_ANSWERS
   const mappingResult = mapAnswersDeterministically(questions, DEMO_ANSWERS);
+
+  // 4. Deterministically evaluate grading & feedback
+  const gradingSummary = evaluateAssessment({
+    questions,
+    answers: DEMO_ANSWERS,
+    mappings: mappingResult.mappings,
+  });
 
   // If already exists in assessmentStore (e.g. from previous load without raster), delete first
   if (existing) {
@@ -127,6 +135,7 @@ export async function ensureDemoAssessmentLoaded(): Promise<Assessment> {
     questions,
     answers: DEMO_ANSWERS,
     mappings: mappingResult.mappings,
+    gradingSummary,
     createdAt: new Date().toISOString(),
   });
 

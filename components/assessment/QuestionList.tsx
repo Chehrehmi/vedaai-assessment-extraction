@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Question, Answer, AnswerMapping, MappingStatus } from '@/lib/domain/types';
+import { Question, Answer, AnswerMapping, MappingStatus, AssessmentGradingSummary } from '@/lib/domain/types';
+import { evaluateAssessment } from '@/lib/grading';
 import { QuestionCard } from './QuestionCard';
 import { UnmatchedAnswersPanel } from './UnmatchedAnswersPanel';
 
@@ -9,6 +10,7 @@ interface QuestionListProps {
   questions: Question[];
   mappings: AnswerMapping[];
   answers: Answer[];
+  gradingSummary?: AssessmentGradingSummary;
   selectedQuestionId?: string;
   selectedAnswerId?: string;
   onSelectQuestion: (question: Question, mapping?: AnswerMapping, answer?: Answer) => void;
@@ -22,6 +24,7 @@ export function QuestionList({
   questions,
   mappings,
   answers,
+  gradingSummary,
   selectedQuestionId,
   selectedAnswerId,
   onSelectQuestion,
@@ -85,6 +88,20 @@ export function QuestionList({
     };
   }, [questions, mappingByQuestionId, unmatchedAnswers]);
 
+  // Grading evaluation summary
+  const effectiveGrading = useMemo(() => {
+    if (gradingSummary) return gradingSummary;
+    return evaluateAssessment({ questions, answers, mappings });
+  }, [gradingSummary, questions, answers, mappings]);
+
+  const evaluationByQuestionId = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const ev of effectiveGrading.evaluations) {
+      map.set(ev.questionId, ev);
+    }
+    return map;
+  }, [effectiveGrading]);
+
   // Filtered questions
   const filteredQuestions = useMemo(() => {
     return sortedQuestions.filter((q) => {
@@ -110,13 +127,43 @@ export function QuestionList({
     <div className="flex flex-col h-full bg-white border-r border-[#dfc0b7]/40">
       {/* Top Header & Stats */}
       <div className="p-4 border-b border-[#dfc0b7]/30 shrink-0">
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-2.5">
           <h2 className="font-extrabold text-lg text-[#241916]">
             Questions ({questions.length})
           </h2>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#fae3dd] text-[#a63b17]">
             {stats.matched} / {stats.total} Mapped
           </span>
+        </div>
+
+        {/* Assessment Grading Summary Banner */}
+        <div className="bg-[#fff8f6] p-3 rounded-2xl border border-[#dfc0b7]/40 mb-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-[#57423b] uppercase tracking-wider">Assessment Summary</span>
+            <span className="text-xs font-extrabold text-[#a63b17]">
+              {effectiveGrading.totalAwardedMarks !== null && effectiveGrading.totalAwardedMarks !== undefined
+                ? `${effectiveGrading.totalAwardedMarks} / ${effectiveGrading.totalMaxMarks} Marks`
+                : `— / ${effectiveGrading.totalMaxMarks} Marks (Awaiting Review)`}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
+            <div className="bg-white py-1.5 px-1 rounded-xl border border-[#dfc0b7]/30">
+              <span className="text-[10px] text-[#57423b] block">Total</span>
+              <span className="font-extrabold text-[#241916]">{stats.total}</span>
+            </div>
+            <div className="bg-white py-1.5 px-1 rounded-xl border border-[#dfc0b7]/30">
+              <span className="text-[10px] text-[#006e1c] block">Answered</span>
+              <span className="font-extrabold text-[#006e1c]">{stats.matched}</span>
+            </div>
+            <div className="bg-white py-1.5 px-1 rounded-xl border border-[#dfc0b7]/30">
+              <span className="text-[10px] text-[#57423b] block">Unanswered</span>
+              <span className="font-extrabold text-[#57423b]">{stats.unanswered}</span>
+            </div>
+            <div className="bg-white py-1.5 px-1 rounded-xl border border-[#dfc0b7]/30">
+              <span className="text-[10px] text-[#a63b17] block">Review</span>
+              <span className="font-extrabold text-[#a63b17]">{stats.needsReview}</span>
+            </div>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -213,6 +260,7 @@ export function QuestionList({
                 question={q}
                 mapping={mapping}
                 answer={answer}
+                evaluation={evaluationByQuestionId.get(q.id)}
                 isSelected={isSelected}
                 onSelect={() => onSelectQuestion(q, mapping, answer)}
                 onJumpToPage={onJumpToPage}

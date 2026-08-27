@@ -81,6 +81,7 @@ export const QuestionSchema = z.object({
   subPart: z.string().optional(),
   alternativeText: z.string().optional(),
   alternativeType: z.literal('visually_impaired').optional(),
+  maxMarks: z.number().min(0, 'maxMarks must be >= 0').optional(),
 });
 
 /**
@@ -128,6 +129,41 @@ export const AnswerMappingSchema = z
   });
 
 /**
+ * Grading evaluation status enum
+ */
+export const EvaluationStatusSchema = z.enum([
+  'correct',
+  'incorrect',
+  'unanswered',
+  'needs_review',
+]);
+
+/**
+ * Question-level grading evaluation result
+ */
+export const QuestionEvaluationSchema = z.object({
+  questionId: z.string().min(1, 'questionId must not be empty'),
+  status: EvaluationStatusSchema,
+  maxMarks: z.number().min(0, 'maxMarks must be >= 0'),
+  awardedMarks: z.number().min(0, 'awardedMarks must be >= 0').nullable().optional(),
+  feedback: z.string().optional(),
+});
+
+/**
+ * Overall assessment grading summary
+ */
+export const AssessmentGradingSummarySchema = z.object({
+  totalQuestions: z.number().int().min(0, 'totalQuestions must be >= 0'),
+  answeredCount: z.number().int().min(0, 'answeredCount must be >= 0'),
+  unansweredCount: z.number().int().min(0, 'unansweredCount must be >= 0'),
+  needsReviewCount: z.number().int().min(0, 'needsReviewCount must be >= 0'),
+  evaluatedCount: z.number().int().min(0, 'evaluatedCount must be >= 0'),
+  totalMaxMarks: z.number().min(0, 'totalMaxMarks must be >= 0'),
+  totalAwardedMarks: z.number().min(0, 'totalAwardedMarks must be >= 0').nullable().optional(),
+  evaluations: z.array(QuestionEvaluationSchema),
+});
+
+/**
  * Document page metadata
  */
 export const DocumentPageMetadataSchema = z.object({
@@ -161,5 +197,6 @@ export const AssessmentSchema = z.object({
   questions: z.array(QuestionSchema),
   answers: z.array(AnswerSchema),
   mappings: z.array(AnswerMappingSchema),
+  gradingSummary: AssessmentGradingSummarySchema.optional(),
   createdAt: z.string().min(1, 'createdAt must not be empty'),
 });

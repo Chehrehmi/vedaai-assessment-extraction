@@ -7,6 +7,9 @@ import {
   MappingStatusSchema,
   MappingMethodSchema,
   AnswerMappingSchema,
+  EvaluationStatusSchema,
+  QuestionEvaluationSchema,
+  AssessmentGradingSummarySchema,
   DocumentPageMetadataSchema,
   DocumentMetadataSchema,
   AssessmentSchema,
@@ -19,6 +22,9 @@ export type Question = z.infer<typeof QuestionSchema>;
 export type MappingStatus = z.infer<typeof MappingStatusSchema>;
 export type MappingMethod = z.infer<typeof MappingMethodSchema>;
 export type AnswerMapping = z.infer<typeof AnswerMappingSchema>;
+export type EvaluationStatus = z.infer<typeof EvaluationStatusSchema>;
+export type QuestionEvaluation = z.infer<typeof QuestionEvaluationSchema>;
+export type AssessmentGradingSummary = z.infer<typeof AssessmentGradingSummarySchema>;
 export type DocumentPageMetadata = z.infer<typeof DocumentPageMetadataSchema>;
 export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type Assessment = z.infer<typeof AssessmentSchema>;

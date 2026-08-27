@@ -4,6 +4,7 @@ import { assessmentStore } from '../store';
 import { rasterStore } from '../raster';
 import { extractQuestionsForAssessment, extractAnswersForAssessment } from '../extraction';
 import { resolveAssessmentMappingsWithSemanticFallback } from '../mapping';
+import { evaluateAssessment } from '../grading';
 import { DocumentAIProvider } from '../ai';
 
 export interface PipelineOptions {
@@ -212,7 +213,7 @@ async function runPipeline(
     });
 
     // ------------------------------------------------------------------------
-    // STAGE 4: finalizing
+    // STAGE 4: finalizing & grading evaluation
     // ------------------------------------------------------------------------
     currentStage = 'finalizing';
     assessmentStore.update(assessmentId, { status: 'finalizing' });
@@ -222,13 +223,20 @@ async function runPipeline(
       throw new Error(`Assessment ${assessmentId} disappeared during processing`);
     }
 
-    validateFinalAssessment(assessmentToFinalize);
+    const gradingSummary = evaluateAssessment(assessmentToFinalize);
+    const finalizedWithGrading = {
+      ...assessmentToFinalize,
+      gradingSummary,
+    };
+
+    validateFinalAssessment(finalizedWithGrading);
 
     // ------------------------------------------------------------------------
     // STAGE 5: completed
     // ------------------------------------------------------------------------
     const completedAssessment = assessmentStore.update(assessmentId, {
       status: 'completed',
+      gradingSummary,
     });
 
     return completedAssessment;

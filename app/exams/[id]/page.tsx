@@ -359,6 +359,7 @@ export default function AssessmentReviewPage({ params }: PageProps) {
               questions={assessment.questions}
               mappings={assessment.mappings}
               answers={assessment.answers}
+              gradingSummary={assessment.gradingSummary}
               selectedQuestionId={selectedQuestionId}
               selectedAnswerId={selectedAnswerId}
               onSelectQuestion={handleSelectQuestion}

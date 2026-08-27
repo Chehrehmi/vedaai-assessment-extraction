@@ -10,6 +10,7 @@ export interface CreateAssessmentParams {
   questions?: Assessment['questions'];
   answers?: Assessment['answers'];
   mappings?: Assessment['mappings'];
+  gradingSummary?: Assessment['gradingSummary'];
   createdAt?: string;
   errorCode?: string;
   errorMessage?: string;
@@ -39,6 +40,7 @@ export class AssessmentStore {
       questions: params.questions || [],
       answers: params.answers || [],
       mappings: params.mappings || [],
+      gradingSummary: params.gradingSummary,
       createdAt,
       errorCode: params.errorCode,
       errorMessage: params.errorMessage,
