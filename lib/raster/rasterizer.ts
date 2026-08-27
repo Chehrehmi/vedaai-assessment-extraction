@@ -159,30 +159,47 @@ async function rasterizePdf(buffer: Buffer): Promise<RasterResult> {
 
     const pages: RasterizedPage[] = [];
 
-    for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 2.0 });
+    try {
+      for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 });
 
-      const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height));
-      const context = canvas.getContext('2d');
+        const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height));
+        const context = canvas.getContext('2d');
 
-      await page.render({
-        canvasContext: context as any,
-        viewport,
-      }).promise;
+        await page.render({
+          canvasContext: context as any,
+          viewport,
+        }).promise;
 
-      const imageBuffer = canvas.toBuffer('image/png');
+        const imageBuffer = canvas.toBuffer('image/png');
 
-      pages.push({
-        pageNumber: pageNum,
-        width: Math.round(viewport.width),
-        height: Math.round(viewport.height),
-        imageBuffer,
-        mimeType: 'image/png',
-      });
+        // Explicitly release page-level operator lists and resources
+        try {
+          page.cleanup();
+        } catch {
+          // Ignore cleanup errors
+        }
+
+        pages.push({
+          pageNumber: pageNum,
+          width: Math.round(viewport.width),
+          height: Math.round(viewport.height),
+          imageBuffer,
+          mimeType: 'image/png',
+        });
+      }
+
+      return { pageCount, pages };
+    } finally {
+      // Explicitly cleanup and destroy pdf.js document parser to release memory
+      try {
+        pdfDoc.cleanup();
+        pdfDoc.destroy();
+      } catch {
+        // Ignore destruction errors
+      }
     }
-
-    return { pageCount, pages };
   } catch (err: any) {
     throw new Error(`Failed to rasterize PDF: ${err?.message || String(err)}`);
   }

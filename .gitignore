@@ -10,3 +10,5 @@ coverage/
 *.log
 *.tsbuildinfo
 phase0-output/
+AGENTS.md
+CLAUDE.md

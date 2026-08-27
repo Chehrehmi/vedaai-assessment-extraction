@@ -28,6 +28,7 @@ export function isAssessmentProcessing(assessmentId: string): boolean {
  */
 export function clearInFlightAssessments(): void {
   inFlightAssessments.clear();
+  globalPipelineQueue = Promise.resolve();
 }
 
 /**
@@ -142,30 +143,24 @@ function validateFinalAssessment(assessment: Assessment): void {
  * Lifecycle:
  * queued -> reading_question_paper -> extracting_questions -> reading_answer_sheet -> detecting_answers -> mapping_answers -> finalizing -> completed
  */
-export async function processAssessment(
+let globalPipelineQueue: Promise<any> = Promise.resolve();
+
+/**
+ * Internal single-assessment pipeline runner.
+ */
+async function runPipeline(
   assessmentId: string,
   options?: PipelineOptions
 ): Promise<Assessment> {
-  // 1. Concurrency check: prevent duplicate concurrent runs
-  if (inFlightAssessments.has(assessmentId)) {
-    const existing = assessmentStore.get(assessmentId);
-    if (existing) {
-      return existing;
-    }
-  }
-
-  // 2. Fetch and validate assessment existence
   const initialAssessment = assessmentStore.get(assessmentId);
   if (!initialAssessment) {
     throw new Error(`Assessment not found: ${assessmentId}`);
   }
 
-  // 3. Idempotency check: if already completed or failed, do not rerun
   if (initialAssessment.status === 'completed' || initialAssessment.status === 'failed') {
     return initialAssessment;
   }
 
-  inFlightAssessments.add(assessmentId);
   let currentStage = initialAssessment.status;
 
   try {
@@ -254,4 +249,47 @@ export async function processAssessment(
   } finally {
     inFlightAssessments.delete(assessmentId);
   }
+}
+
+/**
+ * End-to-end processing pipeline orchestrator.
+ * Connects upload rasterization -> question extraction -> answer extraction -> deterministic mapping -> semantic fallback -> finalization.
+ * Serializes heavy document processing queues in-memory to preserve 512MB RAM constraints on single-container hosting.
+ *
+ * Lifecycle:
+ * queued -> reading_question_paper -> extracting_questions -> reading_answer_sheet -> detecting_answers -> mapping_answers -> finalizing -> completed
+ */
+export async function processAssessment(
+  assessmentId: string,
+  options?: PipelineOptions
+): Promise<Assessment> {
+  // 1. Duplicate check: if already in-flight for this assessment, return existing snapshot
+  if (inFlightAssessments.has(assessmentId)) {
+    const existing = assessmentStore.get(assessmentId);
+    if (existing) {
+      return existing;
+    }
+  }
+
+  // 2. Fetch and validate assessment existence
+  const initialAssessment = assessmentStore.get(assessmentId);
+  if (!initialAssessment) {
+    throw new Error(`Assessment not found: ${assessmentId}`);
+  }
+
+  // 3. Idempotency check: if already completed or failed, do not rerun
+  if (initialAssessment.status === 'completed' || initialAssessment.status === 'failed') {
+    return initialAssessment;
+  }
+
+  inFlightAssessments.add(assessmentId);
+
+  // Enqueue execution behind active global lock so multiple simultaneous jobs run sequentially without overlapping peak memory
+  const currentExecution = globalPipelineQueue.then(
+    () => runPipeline(assessmentId, options),
+    () => runPipeline(assessmentId, options)
+  );
+
+  globalPipelineQueue = currentExecution.catch(() => {});
+  return currentExecution;
 }
