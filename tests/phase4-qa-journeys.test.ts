@@ -286,4 +286,60 @@ describe('Phase 4: Eight Canonical QA Journeys Audit', () => {
     assert.strictEqual(stored?.errorCode, result.errorCode);
     assert.strictEqual(stored?.errorMessage, result.errorMessage);
   });
+
+  // Deployment & Environment Variable Precedence Tests
+  it('GeminiDocumentAIProvider resolves API key from GEMINI_API_KEY when LLM_API_KEY is unset', async () => {
+    const { GeminiDocumentAIProvider } = await import('../lib/ai/gemini-provider');
+    const prevGemini = process.env.GEMINI_API_KEY;
+    const prevLlm = process.env.LLM_API_KEY;
+
+    try {
+      delete process.env.LLM_API_KEY;
+      process.env.GEMINI_API_KEY = 'test_gemini_key_123';
+
+      const provider = new GeminiDocumentAIProvider();
+      // Should not throw missing key error on empty input
+      const res = await provider.extractQuestionsFromImages([]);
+      assert.deepStrictEqual(res, []);
+    } finally {
+      process.env.GEMINI_API_KEY = prevGemini;
+      process.env.LLM_API_KEY = prevLlm;
+    }
+  });
+
+  it('GeminiDocumentAIProvider resolves API key from LLM_API_KEY when GEMINI_API_KEY is unset', async () => {
+    const { GeminiDocumentAIProvider } = await import('../lib/ai/gemini-provider');
+    const prevGemini = process.env.GEMINI_API_KEY;
+    const prevLlm = process.env.LLM_API_KEY;
+
+    try {
+      delete process.env.GEMINI_API_KEY;
+      process.env.LLM_API_KEY = 'test_llm_key_456';
+
+      const provider = new GeminiDocumentAIProvider();
+      const res = await provider.extractQuestionsFromImages([]);
+      assert.deepStrictEqual(res, []);
+    } finally {
+      process.env.GEMINI_API_KEY = prevGemini;
+      process.env.LLM_API_KEY = prevLlm;
+    }
+  });
+
+  it('GeminiDocumentAIProvider constructor options take highest precedence', async () => {
+    const { GeminiDocumentAIProvider } = await import('../lib/ai/gemini-provider');
+    const prevGemini = process.env.GEMINI_API_KEY;
+    const prevLlm = process.env.LLM_API_KEY;
+
+    try {
+      process.env.GEMINI_API_KEY = 'env_gemini';
+      process.env.LLM_API_KEY = 'env_llm';
+
+      const provider = new GeminiDocumentAIProvider({ apiKey: 'explicit_key' });
+      const res = await provider.extractQuestionsFromImages([]);
+      assert.deepStrictEqual(res, []);
+    } finally {
+      process.env.GEMINI_API_KEY = prevGemini;
+      process.env.LLM_API_KEY = prevLlm;
+    }
+  });
 });

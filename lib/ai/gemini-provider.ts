@@ -170,13 +170,23 @@ export class GeminiDocumentAIProvider implements DocumentAIProvider {
   private readonly modelName: string;
 
   constructor(options?: { apiKey?: string; modelName?: string }) {
-    this.apiKey = options?.apiKey || process.env.LLM_API_KEY || '';
-    this.modelName = options?.modelName || process.env.LLM_MODEL_NAME || 'gemini-3.6-flash';
+    this.apiKey =
+      options?.apiKey ||
+      process.env.GEMINI_API_KEY ||
+      process.env.LLM_API_KEY ||
+      '';
+    this.modelName =
+      options?.modelName ||
+      process.env.GEMINI_MODEL_NAME ||
+      process.env.LLM_MODEL_NAME ||
+      'gemini-3.6-flash';
   }
 
   async extractQuestionsFromImages(pages: PageImageInput[]): Promise<RawQuestionExtraction[]> {
     if (!this.apiKey) {
-      throw new Error('LLM_API_KEY is not configured for GeminiDocumentAIProvider');
+      throw new Error(
+        'GEMINI_API_KEY (or LLM_API_KEY) is not configured for GeminiDocumentAIProvider'
+      );
     }
 
     if (!pages || pages.length === 0) {
@@ -253,7 +263,9 @@ export class GeminiDocumentAIProvider implements DocumentAIProvider {
 
   async extractAnswersFromImages(pages: PageImageInput[]): Promise<RawAnswerBlock[]> {
     if (!this.apiKey) {
-      throw new Error('LLM_API_KEY is not configured for GeminiDocumentAIProvider');
+      throw new Error(
+        'GEMINI_API_KEY (or LLM_API_KEY) is not configured for GeminiDocumentAIProvider'
+      );
     }
 
     if (!pages || pages.length === 0) {
@@ -364,7 +376,9 @@ export class GeminiDocumentAIProvider implements DocumentAIProvider {
     answers: SemanticAnswerCandidate[]
   ): Promise<SemanticMappingDecision[]> {
     if (!this.apiKey) {
-      throw new Error('LLM_API_KEY is not configured for GeminiDocumentAIProvider');
+      throw new Error(
+        'GEMINI_API_KEY (or LLM_API_KEY) is not configured for GeminiDocumentAIProvider'
+      );
     }
 
     if (!questions || questions.length === 0 || !answers || answers.length === 0) {
